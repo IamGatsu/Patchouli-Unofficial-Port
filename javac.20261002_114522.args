@@ -1,0 +1,11 @@
+-proc:none
+-nowarn
+-Xmaxerrs
+100000
+-XDshould-stop.ifError=FLOW
+-XDshould-stop.ifNoError=FLOW
+-cp
+/home/claude/mc65.jar
+-d
+/tmp/cls
+@/tmp/srcs

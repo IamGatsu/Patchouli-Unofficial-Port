@@ -1,0 +1,100 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'maven-publish'
+}
+
+version = "${mc_version}-${build_number}-fabric"
+group = project.group
+base.archivesName = "${mod_name}".toLowerCase()
+
+java {
+	toolchain.languageVersion = JavaLanguageVersion.of(java_version as int)
+	withSourcesJar()
+}
+
+repositories {
+	mavenCentral()
+	maven {
+		name = "Modmuss"
+		url = "https://maven.modmuss50.me/"
+		content {
+			includeGroup "me.zeroeightsix"
+		}
+	}
+	maven {
+		name = "JEI"
+		url = "https://maven.blamejared.com/"
+		content {
+			includeGroup "mezz.jei"
+		}
+	}
+}
+
+loom {
+	accessWidenerPath = file("src/main/resources/patchouli.classtweaker")
+
+	runs {
+		configureEach {
+			ideConfigGenerated(true)
+			runDir("run")
+			source("test")
+		}
+		client {
+			client()
+			setConfigName("Fabric Client")
+		}
+		server {
+			server()
+			setConfigName("Fabric Server")
+		}
+	}
+
+	mods.register(project.mod_id) {
+		sourceSet sourceSets.main
+		sourceSet sourceSets.test
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${mc_version}"
+	implementation "net.fabricmc:fabric-loader:${fabric_loader}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api}"
+
+	implementation "me.zeroeightsix:fiber:${fiber_version}"
+	include "me.zeroeightsix:fiber:${fiber_version}"
+
+	compileOnly "mezz.jei:jei-${jei_mc_version}-common-api:${jei_version}"
+}
+
+def expandProps = [
+	"version"              : project.version,
+	"mod_name"             : mod_name,
+	"mod_id"               : mod_id,
+	"mod_description"      : mod_description,
+	"mc_min_version"       : mc_min_version,
+	"mc_max_version"       : mc_max_version,
+	"fabric_loader_version": fabric_loader,
+	
+]
+
+processResources {
+	inputs.properties expandProps
+	filesMatching("fabric.mod.json") {
+		expand expandProps
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.encoding = 'UTF-8'
+	it.options.release = java_version as int
+}
+
+jar {
+	from("LICENSE") {
+		rename { "${it}_${base.archivesName.get()}" }
+	}
+	exclude "**/*.bat"
+	exclude "**/*.psd"
+	exclude "**/*.exe"
+	exclude "**/unused"
+}
